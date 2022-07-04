@@ -1,0 +1,5 @@
+gdpc==5.0.2
+pyglm
+pyglm-typing
+numpy
+scipy
