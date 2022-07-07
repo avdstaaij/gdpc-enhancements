@@ -104,6 +104,9 @@ def placeRect(itf: Interface, rect: Rect, y: int, block: Block, replace: Optiona
     placeBox(itf, rect.toBox(y, 1), block, replace)
 
 
+# TODO: Wrap other GDPC geometry functions, just like placeLine and placeCuboid.
+
+
 def placeRectOutline(itf: Interface, rect: Rect, y: int, block: Block, replace: Optional[Union[str, List[str]]] = None):
     """ Places the outline of a rectangle of blocks in the XY-plane, at height [y] """
     if (rect.size.x == 0 or rect.size.y == 0): return
