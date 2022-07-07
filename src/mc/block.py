@@ -9,14 +9,31 @@ from mc.block_state_util import transformAxisString, transformFacingString
 
 @dataclass
 class Block:
-    """ A Minecraft block.\n
-        If self.name is a list, the instance represents a block palette. """
+    """ A Minecraft block.
+
+        If self.name is a list, the instance represents a block palette.
+
+        Block state can be stored in [otherState], and NBT data can be stored in [nbt] (excluding
+        the outer braces).
+
+        Some orientation-related block states need to be stored in explicitly named fields to ensure
+        that the Block transforms correctly. These are:
+        - axis
+        - facing
+
+        Other orientation-related block states are currently not supported by the transformation
+        system. """
+
+    # TODO: Known orientation-related block states that are currently not supported:
+    # - type="bottom"/"top" (e.g. slabs)  (note that slabs can also have type="double"!)
+    # - half="bottom"/"top" (e.g. stairs) ("half" is also used for other purposes, see e.g. doors)
+    # - rotation=[0,16]     (e.g. signs)  (should probably be named "granularRotation" here to avoid confusion)
 
     name:       Union[str, List[str]] = "minecraft:stone"
     axis:       Optional[str]         = None
     facing:     Optional[str]         = None
     otherState: Optional[str]         = None
-    nbt:        Optional[str]         = None  # Excluding the outer braces
+    nbt:        Optional[str]         = None
     needsLatePlacement: bool          = False # Whether the block needs to be placed after its neighbors
 
 
