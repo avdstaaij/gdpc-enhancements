@@ -1,5 +1,10 @@
 """ Provides the Block class """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from typing import Any, Union, Optional, List
 from dataclasses import dataclass
 from glm import bvec3

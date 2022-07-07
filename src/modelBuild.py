@@ -2,6 +2,11 @@
 
 """ Executable script that builds saved models. Use --help for more information. """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from importlib import import_module
 import sys
 import argparse

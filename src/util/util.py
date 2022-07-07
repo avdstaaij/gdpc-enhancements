@@ -1,5 +1,10 @@
 """ Generic utilities """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from typing import TypeVar, Generic
 from contextlib import contextmanager
 from dataclasses import dataclass

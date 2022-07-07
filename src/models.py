@@ -3,6 +3,11 @@
 # This file contains generated model code. It's not intended to be readable.
 # Code folding is recommended. (In VS Code: Ctrl-K Ctrl-0.)
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from glm import ivec3
 
 from mc.model import Model

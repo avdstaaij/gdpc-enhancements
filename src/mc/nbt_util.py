@@ -1,5 +1,10 @@
 """ NBT-generating utility functions """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from typing import List, Optional
 
 

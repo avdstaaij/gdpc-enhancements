@@ -16,6 +16,11 @@
     https://github.com/nilsgawlik/gdmc_http_client_python
 """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 import sys
 
 import numpy as np

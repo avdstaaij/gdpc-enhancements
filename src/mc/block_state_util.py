@@ -1,5 +1,10 @@
 """ Utilities for working with orientation-related block state properties """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from glm import ivec3, bvec3
 
 

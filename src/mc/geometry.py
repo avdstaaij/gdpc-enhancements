@@ -2,6 +2,11 @@
 
     Wraps gdpc v5.0's geometry module to work with vectors, and extends it. """
 
+__author__    = "Arthur van der Staaij"
+__copyright__ = "Copyright 2022, Arthur van der Staaij"
+__licence__   = "MIT"
+
+
 from typing import Optional, Union, List
 from dataclasses import dataclass
 from glm import ivec3
