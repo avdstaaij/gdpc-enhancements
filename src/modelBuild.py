@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+""" Executable script that builds saved models. Use --help for more information. """
+
 from importlib import import_module
 import sys
 import argparse
@@ -19,7 +21,7 @@ DEFAULT_MODEL_MODULE = "models"
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description="Builds a saved minecraft model in the build area. Useful for debugging."
+        description="Builds a saved Minecraft model in the build area. Useful for debugging."
     )
     parser.add_argument(
         "model", nargs="?", type=str,

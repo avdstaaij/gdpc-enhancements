@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+""" Executable script that scans in models. Use --help for more information. """
+
 import sys
 from typing import List
 import argparse

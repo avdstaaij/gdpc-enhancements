@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
 
+""" Executable script that build an example structure in the center of the build area.
+
+    The purpose of this file is to demonstrate the usage of the core GDPC v5.0 enhancements provided
+    by this repository. It does not demonstrate every enhancement, and it assumes some familiarity
+    with the base GDPC framework.
+
+    The following enhancements are demonstrated:
+    - Vectors and various vector math utilities.
+    - The Transform class and the use of local coordinate systems.
+    - The placement of blocks with NBT data.
+    - The placement of saved models.
+
+    To install or learn more about the base GDPC framework, visit
+    https://github.com/nilsgawlik/gdmc_http_client_python
+"""
+
 import sys
 
 import numpy as np

@@ -1,3 +1,5 @@
+""" Contains generated model code """
+
 # This file contains generated model code. It's not intended to be readable.
 # Code folding is recommended. (In VS Code: Ctrl-K Ctrl-0.)
 
