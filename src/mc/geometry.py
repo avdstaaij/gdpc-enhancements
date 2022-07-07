@@ -13,7 +13,6 @@ from glm import ivec3
 from gdpc import geometry
 
 from mc.vector_util import addY, scaleToFlip3D, Rect, Box, boxBetween
-from mc.transform import Transform
 from mc.block import Block
 from mc.interface import Interface
 

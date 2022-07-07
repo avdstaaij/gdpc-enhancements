@@ -13,7 +13,7 @@ from copy import copy, deepcopy
 import random
 import time
 from concurrent import futures
-from glm import ivec3, bvec3
+from glm import ivec3
 
 from util.util import isign, stdoutToStderr, eprint
 
