@@ -1,15 +1,16 @@
-"""
-Wrappers around gdpc v5.0 that work with vectors
-"""
+""" Functions that place blocks in geometrical patterns.
+
+    Wraps gdpc v5.0's geometry module to work with vectors, and extends it. """
 
 from typing import Optional, Union, List
 from dataclasses import dataclass
-from glm import ivec3, bvec2
+from glm import ivec3
 from gdpc import geometry
 
-from .vectorUtil import FORWARD, LEFT, Rect, Area, addY, areaBetween, Transform
-from .block import Block
-from .interface import Interface
+from mc.vector_util import addY, scaleToFlip3D, Rect, Box, boxBetween
+from mc.transform import Transform
+from mc.block import Block
+from mc.interface import Interface
 
 
 # An explanation of why this class is here:
@@ -38,9 +39,10 @@ from .interface import Interface
 # manually stringify blocks in the wrapping geometry functions. This way, we only have to do so for
 # the corner blocks of the geometrical areas, rather than all of them.
 @dataclass
-class __HackedGDPCInterface():
+class _HackedGDPCInterface():
     interface: Interface
 
+    # We call the gdpc geometry functions with "block" set to the tuple of values we need here.
     def placeBlock(self, x, y, z, block, replace=None, doBlockUpdates=-1, customFlags=-1):
         self.interface.placeStringGlobal(ivec3(x, y, z), block[0], block[1], block[2], block[3], replace)
         return "0" # Indicates "no error" to gdpc.
@@ -48,118 +50,99 @@ class __HackedGDPCInterface():
     def setBuffering(self, value, notify):
         pass
 
-    def isBuffering(self): # pylint: disable=no-self-use
+    def isBuffering(self):
         return True # No need to speak the truth here.
 
 
-def placeLine(itf: Interface, first: ivec3, last: ivec3, block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
+def placeList(itf: Interface, position_list: List[ivec3], block: Block, replace: Optional[Union[str, List[str]]] = None):
+    """ Places a [block] at each position in [position_list].\n
+        Slightly more efficient than calling Interface.placeBlock() in a loop. """
+    blockState = block.blockStateString(itf.transform.rotation, scaleToFlip3D(itf.transform.rotation))
+    for position in position_list:
+        itf.placeStringGlobal(position, itf.transform.scale, block.name, blockState, block.nbt, replace)
+
+
+def placeLine(itf: Interface, first: ivec3, last: ivec3, block: Block, replace: Optional[Union[str, List[str]]] = None):
+    """ Places a line of [block] blocks from [first] to [last] (inclusive).\n
+        When placing axis-aligned lines, placeCuboid and placeBox are more efficient. """
     globalFirst = itf.transform * first
     globalLast  = itf.transform * last
-    globalRotation = (rotation + itf.transform.rotation) % 4 # We cannot interpolate rotations, so we take only one
-    globalScale    = itf.transform.scale # We could take a local scale parameter, but would we really ever use it?
     geometry.placeLine(
         globalFirst.x, globalFirst.y, globalFirst.z,
         globalLast .x, globalLast .y, globalLast .z,
-        (globalScale, block.name, block.blockStateString(globalRotation, bvec2(globalScale.x < 0, globalScale.z < 0)), block.nbt),
+        (itf.transform.scale, block.name, block.blockStateString(itf.transform.rotation, scaleToFlip3D(itf.transform.scale)), block.nbt),
         replace,
-        interface = __HackedGDPCInterface(itf)
+        interface = _HackedGDPCInterface(itf)
     )
 
 
-def placeCuboid(itf: Interface, first: ivec3, last: ivec3, block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None, hollow: bool = False):
+# TODO: Add a "wireframe" option, perhaps with another boolean next to [hollow].
+def placeCuboid(itf: Interface, first: ivec3, last: ivec3, block: Block, replace: Optional[Union[str, List[str]]] = None, hollow: bool = False):
+    """ Places a box of [block] blocks from [first] to [last] (inclusive).\n
+        If [hollow]=True, the box is hollow, but sides are always filled. """
     globalFirst = itf.transform * first
     globalLast  = itf.transform * last
-    globalRotation = (rotation + itf.transform.rotation) % 4 # We cannot interpolate rotations, so we take only one
-    globalScale    = itf.transform.scale # We could take a local scale parameter, but would we really ever use it?
     geometry.placeCuboid(
         globalFirst.x, globalFirst.y, globalFirst.z,
         globalLast .x, globalLast .y, globalLast .z,
-        (globalScale, block.name, block.blockStateString(globalRotation, bvec2(globalScale.x < 0, globalScale.z < 0)), block.nbt),
+        (itf.transform.scale, block.name, block.blockStateString(itf.transform.rotation, scaleToFlip3D(itf.transform.scale)), block.nbt),
         replace, hollow,
-        interface = __HackedGDPCInterface(itf)
+        interface = _HackedGDPCInterface(itf)
     )
 
 
-def placeArea(itf: Interface, area: Area, block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None, hollow: bool = False):
-    if (area.size.x == 0 or area.size.y == 0 or area.size.z == 0): return
-    placeCuboid(itf, area.begin, area.end - 1, block, rotation, replace, hollow)
+def placeBox(itf: Interface, box: Box, block: Block, replace: Optional[Union[str, List[str]]] = None, hollow: bool = False):
+    """ Places a box of [block] blocks.\n
+        If [hollow]=True, the box is hollow, but sides are always filled. """
+    if (box.size.x == 0 or box.size.y == 0 or box.size.z == 0): return
+    placeCuboid(itf, box.begin, box.end - 1, block, replace, hollow)
 
 
-def placeCornerPillars(itf, area, block):
-    pillar = Area(area.begin, ivec3(1,area.size.y,1))
-    placeArea(itf, pillar, block)
-    pillar.begin += LEFT * (area.size.x-1)
-    placeArea(itf, pillar, block)
-    pillar.begin += FORWARD * (area.size.z-1)
-    placeArea(itf, pillar, block)
-    pillar.begin -= LEFT * (area.size.x-1)
-    placeArea(itf, pillar, block)
-
-
-def placeRect(itf: Interface, rect: Rect, y: int, block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None, hollow: bool = False):
+def placeRect(itf: Interface, rect: Rect, y: int, block: Block, replace: Optional[Union[str, List[str]]] = None):
+    """ Places a rectangle of blocks in the XY-plane, at height [y] """
     if (rect.size.x == 0 or rect.size.y == 0): return
-    placeArea(itf, rect.toArea(y, 1), block, rotation, replace, hollow)
+    placeBox(itf, rect.toBox(y, 1), block, replace)
 
 
-# TODO: improve?
-def placeList(itf: Interface, block_list: List[ivec3], block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    for block_pos in block_list:
-        itf.placeBlock(Transform(block_pos, rotation), block, replace)
+def placeRectOutline(itf: Interface, rect: Rect, y: int, block: Block, replace: Optional[Union[str, List[str]]] = None):
+    """ Places the outline of a rectangle of blocks in the XY-plane, at height [y] """
+    if (rect.size.x == 0 or rect.size.y == 0): return
+    t = Transform(addY(rect.offset, y))
+    itf.transform.push(t)
+    placeCuboid(itf, ivec3(            0, 0,             0), ivec3(rect.size.x-1, 0,             0), block, replace)
+    placeCuboid(itf, ivec3(rect.size.x-1, 0,             0), ivec3(rect.size.x-1, 0, rect.size.y-1), block, replace)
+    placeCuboid(itf, ivec3(rect.size.x-1, 0, rect.size.y-1), ivec3(            0, 0, rect.size.y-1), block, replace)
+    placeCuboid(itf, ivec3(            0, 0, rect.size.y-1), ivec3(            0, 0,             0), block, replace)
+    itf.transform.pop(t)
 
 
-def placeRectOutline(itf: Interface, rect: Rect, y: int, block: Block, rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    transform = Transform(addY(rect.offset, y))
-    itf.transform.push(transform)
-    placeLine(itf, first=ivec3(0, 0, 0), last=ivec3(rect.size.x - 1, 0, 0),
-              block=block, rotation=rotation, replace=replace)
-    placeLine(itf, first=ivec3(rect.size.x - 1, 0, 0), last=ivec3(rect.size.x - 1, 0, rect.size.y - 1),
-              block=block, rotation=rotation, replace=replace)
-    placeLine(itf, first=ivec3(rect.size.x - 1, 0, rect.size.y - 1), last=ivec3(0, 0, rect.size.y - 1),
-              block=block, rotation=rotation, replace=replace)
-    placeLine(itf, first=ivec3(0, 0, rect.size.y - 1), last=ivec3(0, 0, 0),
-              block=block, rotation=rotation, replace=replace)
-    itf.transform.pop(transform)
+def placeCornerPillars(itf: Interface, box: Box, block: Block, replace: Optional[Union[str, List[str]]] = None):
+    """ Places pillars of [block] blocks at the corners of [box] """
+    for corner in box.toRect().corners:
+        placeBox(itf, Box(addY(corner, box.offset.y), ivec3(1, box.size.y, 1)), block, replace)
 
 
-def placeCheckeredCuboid(itf: Interface, first: ivec3, last: ivec3, block1: Block, block2: Block = Block("minecraft:air"), rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    placeCheckeredArea(itf, areaBetween(first, last), block1, block2, rotation, replace)
+def placeCheckeredCuboid(itf: Interface, first: ivec3, last: ivec3, block1: Block, block2: Block = Block("minecraft:air"), replace: Optional[Union[str, List[str]]] = None):
+    """ Places a checker pattern of [block1] and [block2] in the box between [first] and [last]
+        (inclusive) """
+    placeCheckeredBox(itf, boxBetween(first, last), block1, block2, replace)
 
 
-def placeCheckeredArea(itf: Interface, area: Area, block1: Block, block2: Block = Block("minecraft:air"), rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    # TODO: simplify this loop
-    i = 0
-    for x in range(area.begin.x, area.end.x):
-        i = (i + 1) % 2
-        j = i
-        for y in range(area.begin.y, area.end.y):
-            j = (j + 1) % 2
-            k = j
-            for z in range(area.begin.z, area.end.z):
-                k = (k + 1) % 2
-                itf.placeBlock(Transform(ivec3(x,y,z), rotation), block1 if k == 0 else block2, replace)
+def placeCheckeredBox(itf: Interface, box: Box, block1: Block, block2: Block = Block("minecraft:air"), replace: Optional[Union[str, List[str]]] = None):
+    """ Places a checker pattern of [block1] and [block2] in [box] """
+    # We loop through [box]-local positions so that the pattern start is independent of [box].offset
+    for pos in Box(size=box.size).inner:
+        itf.placeBlock(box.offset + pos, block1 if sum(pos) % 2 == 0 else block2, replace)
 
 
-def placeZStripedArea(itf: Interface, area: Area, block1: Block, block2: Block = Block("minecraft:air"), rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    i = 0
-    for x in range(area.begin.x, area.end.x):
-        i = (i + 1) % 2
-        j = i
-        for y in range(area.begin.y, area.end.y):
-            # j = (j + 1) % 2
-            k = j
-            for z in range(area.begin.z, area.end.z):
-                # k = (k + 1) % 2
-                itf.placeBlock(Transform(ivec3(x,y,z), rotation), block1 if k == 0 else block2, replace)
+def placeStripedCuboid(itf: Interface, first: ivec3, last: ivec3, stripeAxis: int, block1: Block, block2: Block = Block("minecraft:air"), replace: Optional[Union[str, List[str]]] = None):
+    """ Places a stripe pattern of [block1] and [block2] along [stripeAxis] (0, 1 or 2) in the box
+        between [first] and [last] (inclusive) """
+    placeStripedBox(itf, boxBetween(first, last), stripeAxis, block1, block2, replace)
 
 
-def placeXStripedArea(itf: Interface, area: Area, block1: Block, block2: Block = Block("minecraft:air"), rotation: int = 0, replace: Optional[Union[str, List[str]]] = None):
-    i = 0
-    for x in range(area.begin.x, area.end.x):
-        # i = (i + 1) % 2
-        j = i
-        for y in range(area.begin.y, area.end.y):
-            # j = (j + 1) % 2
-            k = j
-            for z in range(area.begin.z, area.end.z):
-                k = (k + 1) % 2
-                itf.placeBlock(Transform(ivec3(x,y,z), rotation), block1 if k == 0 else block2, replace)
+def placeStripedBox(itf: Interface, box: Box, stripeAxis: int, block1: Block, block2: Block = Block("minecraft:air"), replace: Optional[Union[str, List[str]]] = None):
+    """ Places a stripe pattern of [block1] and [block2] along [stripeAxis] (0, 1 or 2) in [box] """
+    # We loop through [box]-local positions so that the pattern start is independent of [box].offset
+    for pos in Box(size=box.size).inner:
+        itf.placeBlock(box.offset + pos, block1 if pos[stripeAxis] % 2 == 0 else block2, replace)

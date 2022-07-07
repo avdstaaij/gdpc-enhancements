@@ -3,3 +3,4 @@ pyglm
 pyglm-typing
 numpy
 scipy
+more-itertools

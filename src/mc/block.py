@@ -1,48 +1,56 @@
-from typing import Any, Union, Optional, List
-from copy import deepcopy
-from dataclasses import dataclass
-from glm import bvec2
+""" Provides the Block class """
 
-from .util import transformXZaxisString, transformXZfacingString
+from typing import Any, Union, Optional, List
+from dataclasses import dataclass
+from glm import bvec3
+
+from mc.block_state_util import transformAxisString, transformFacingString
 
 
 @dataclass
 class Block:
-    name:      Union[str, List[str]] = "minecraft:stone"
-    axis:      Optional[str]         = None
-    facing:    Optional[str]         = None
-    otherData: Optional[str]         = None
-    nbt:       Optional[str]         = None # Excluding the outer braces
-    needs_late_placement: bool       = False # Whether the block needs to be placed after its neighbors
+    """ A Minecraft block.\n
+        If self.name is a list, the instance represents a block palette. """
+
+    name:       Union[str, List[str]] = "minecraft:stone"
+    axis:       Optional[str]         = None
+    facing:     Optional[str]         = None
+    otherState: Optional[str]         = None
+    nbt:        Optional[str]         = None  # Excluding the outer braces
+    needsLatePlacement: bool          = False # Whether the block needs to be placed after its neighbors
 
 
-    def transform(self, rotation: int = 0, flip: bvec2 = bvec2()):
-        if not self.axis   is None: self.axis   = transformXZaxisString  (self.axis,   rotation)
-        if not self.facing is None: self.facing = transformXZfacingString(self.facing, rotation, flip)
+    def transform(self, rotation: int = 0, flip: bvec3 = bvec3()):
+        """ Transforms this block.\n
+            Flips first, rotates second. """
+        if not self.axis   is None: self.axis   = transformAxisString  (self.axis,   rotation)
+        if not self.facing is None: self.facing = transformFacingString(self.facing, rotation, flip)
 
 
-    def transformed(self, rotation: int = 0, flip: bvec2 = bvec2()):
+    def transformed(self, rotation: int = 0, flip: bvec3 = bvec3()):
+        """ Returns a transformed copy of this block.\n
+            Flips first, rotates second. """
         return Block(
-            name      = self.name,
-            axis      = None if self.axis   is None else transformXZaxisString  (self.axis,   rotation),
-            facing    = None if self.facing is None else transformXZfacingString(self.facing, rotation, flip),
-            otherData = self.otherData,
-            nbt       = self.nbt,
-            needs_late_placement = self.needs_late_placement
+            name       = self.name,
+            axis       = None if self.axis   is None else transformAxisString  (self.axis,   rotation),
+            facing     = None if self.facing is None else transformFacingString(self.facing, rotation, flip),
+            otherState = self.otherState,
+            nbt        = self.nbt,
+            needsLatePlacement = self.needsLatePlacement
         )
 
 
-    def blockStateString(self, rotation: int = 0, flip: bvec2 = bvec2()):
+    def blockStateString(self, rotation: int = 0, flip: bvec3 = bvec3()):
         """ Returns a string containing the block state of this block """
 
-        if self.axis is None and self.facing is None and self.otherData is None:
+        if self.axis is None and self.facing is None and self.otherState is None:
             return ""
 
-        dataItems = []
-        if not self.axis       is None: dataItems.append("axis="   + transformXZaxisString  (self.axis,   rotation))
-        if not self.facing     is None: dataItems.append("facing=" + transformXZfacingString(self.facing, rotation, flip))
-        if not self.otherData  is None: dataItems.append(self.otherData)
-        return "[" + ",".join(dataItems) + "]"
+        stateItems = []
+        if not self.axis       is None: stateItems.append("axis="   + transformAxisString  (self.axis,   rotation))
+        if not self.facing     is None: stateItems.append("facing=" + transformFacingString(self.facing, rotation, flip))
+        if not self.otherState is None: stateItems.append(self.otherState)
+        return "[" + ",".join(stateItems) + "]"
 
 
     def __str__(self):
@@ -53,47 +61,44 @@ class Block:
 
 
     def __repr__(self):
+        # This is used for model dumping; it needs to return a string that eval()'s to this Block.
         # The default repr includes unnecessary default values, which make model dumps way larger
         # than they need to be.
-        def optFieldStr(name: str, value: Optional[Any]):
+        def optFieldStr(name: str, value: Any):
             return ("" if value is None else f",{name}={repr(value)}")
         return (
-            f"Block(\"{self.name}\"" +
-            optFieldStr("axis",      self.axis)      +
-            optFieldStr("facing",    self.facing)    +
-            optFieldStr("otherData", self.otherData) +
-            optFieldStr("nbt",       self.nbt)       +
-            (",needs_late_placement=True" if self.needs_late_placement else "") +
-            ")"
+            f'Block("{self.name}"'
+            + optFieldStr("axis",       self.axis)
+            + optFieldStr("facing",     self.facing)
+            + optFieldStr("otherState", self.otherState)
+            + optFieldStr("nbt",        self.nbt)
+            + (",needsLatePlacement=True" if self.needsLatePlacement else "")
+            + ")"
         )
 
 
     @staticmethod
-    def fromBlockCompound(blockCompound, rotation: int = 0):
-        """
-        [rotation] specifies the rotation with which we are looking at the block.
-        That is, its /inverse/ will be added to the returned Block.
-        """
-        # TODO: read in NBT data here, if we ever need that in a model
+    def fromBlockCompound(blockCompound, rotation: int = 0, flip: bvec3 = bvec3()):
+        """ Parses a block compound into a Block. """
+        # TODO: parse NBT data
         block = Block(str(blockCompound["Name"]))
         if "Properties" in blockCompound:
             properties = blockCompound["Properties"]
-            dataItems = []
+            stateItems = []
             for key in properties:
                 value = str(properties[key])
                 if key in ["shape", "north", "east", "south", "west"]:
                     # This is a late property. We drop it, but set needs_late_placement to True
-                    block.needs_late_placement = True
+                    block.needsLatePlacement = True
                 elif key == "axis":
                     block.axis = value
                 elif key == "facing":
                     block.facing = value
                 else:
-                    dataItems.append(str(key) + "=" + value)
-            if dataItems:
-                block.otherData = ",".join(dataItems)
+                    stateItems.append(str(key) + "=" + value)
+            if stateItems:
+                block.otherState = ",".join(stateItems)
 
-        inverseRotation = (-rotation + 4) % 4
-        block.transform(inverseRotation)
+        block.transform(rotation, flip)
 
         return block

@@ -10,7 +10,8 @@ from glm import ivec3 # Import needed for eval
 
 from util.util import eprint
 
-from mc.vectorUtil import vecString, Transform, Area, rotatedAreaTransform
+from mc.vector_util import vecString, Box
+from mc.transform import Transform, rotatedBoxTransform
 from mc.interface import getBuildArea, Interface
 from mc.block import Block # Import needed for eval
 from mc.model import Model
@@ -57,7 +58,7 @@ def main():
     eprint(f"Building model at {vecString(buildArea.offset)}")
 
     itf = Interface(Transform(buildArea.offset), buffering=True)
-    model.build(itf, rotatedAreaTransform(Area(size=model.size), args.rotation))
+    model.build(itf, rotatedBoxTransform(Box(size=model.size), args.rotation))
 
 
 if __name__ == '__main__':

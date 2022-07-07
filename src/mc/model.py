@@ -1,31 +1,71 @@
+""" Provides the Model class """
+
 from dataclasses import dataclass
 from typing import Union, Optional, List, Dict
 from copy import copy
 from glm import ivec3
 
-from util.util import filledList
-from .util import to_namespaced_id
-from .vectorUtil import Transform, Area
-from .interface import Interface
-from .block import Block
+from mc.vector_util import Box
+from mc.transform import Transform
+from mc.interface import Interface
+from mc.block import Block
 
 
-@dataclass
 class Model:
-    def __init__(self, size: ivec3, blocks: Optional[List[List[List[Optional[Block]]]]] = None):
-        self.size = size
-        if blocks is not None:
-            self.blocks = blocks
-        else:
-            self.blocks = filledList(size.x, filledList(size.y, filledList(size.z, None)))
+    """ A 3D model of Minecraft blocks.
 
-    size:   ivec3
-    blocks: List[List[List[Optional[Block]]]]
+        Can be used to store a structure in memory, allowing it to be built under different
+        transformations. """
+
+    def __init__(self, size: ivec3, blocks: Optional[List[Optional[Block]]] = None):
+        """ Constructs a Model of size [size], optionally filled with [blocks]. """
+        self._size = copy(size)
+        if blocks is not None:
+            if len(blocks) != size.x * size.y * size.z:
+                raise ValueError("The number of blocks should be equal to size.x * size.y * size.z")
+            self._blocks = copy(blocks)
+        else:
+            self._blocks = [None] * (size.x * size.y * size.z)
+
+
+    @property
+    def size(self):
+        """ This Model's size """
+        return copy(self._size)
+
+    @property
+    def blocks(self) -> List[Optional[Block]]:
+        """ This Model's block list """
+        return copy(self._blocks) # Allows block modification, but not resizing
+
 
     def block(self, vec: ivec3):
-        return self.blocks[vec.x][vec.y][vec.z]
+        """ Returns the block at [vec] """
+        return self._blocks[(vec.x * self._size.y + vec.y) * self._size.z + vec.z]
+
+    def set_block(self, vec: ivec3, block: Optional[Block]):
+        """ Sets the block at [vec] to [block] """
+        self._blocks[(vec.x * self._size.y + vec.y) * self._size.z + vec.z] = block
+
 
     def build(self, itf: Interface, t = Transform(), substitutions: Optional[Dict[str, str]] = None, replace: Optional[Union[str, List[str]]] = None):
+        """" Builds the model.
+
+             Use [substitutions] to build the model with certain blocks types replaced by others.
+
+             Small limitation: when using [replace], neighbor-dependent blocks such as fences may
+             get the wrong shape """
+
+        # Combining [replace] and late placement is not supported for the following reason:
+        # Late-placed blocks need to be placed multiple times to make sure they get the right shape,
+        # but if [replace] is used, then every placement after the first one needs to set replace to
+        # the namespaced id of late-placed block itself. However, obtaining the namespaced id of the
+        # late-placed block is not trivial, since it may be specified as an un-namespaced id.
+        # For example, when late-placing "fence" with replacement, every placement after the first
+        # would have to replace "<namespace>:fence" (e.g. "minecraft:fence"), but we can't easily
+        # figure out what <namespace> needs to be. We could just assume "minecraft", but that might
+        # break if other mods are used.
+
         if substitutions is None: substitutions = {}
 
         @dataclass
@@ -33,39 +73,30 @@ class Model:
             block:    Block
             position: ivec3
 
-        late_blocks: List[LateBlockInfo] = []
+        lateBlocks: List[LateBlockInfo] = []
 
         itf.transform.push(t)
 
-        for vec in Area(size=self.size).inner:
-            block = self.blocks[vec.x][vec.y][vec.z]
+        for vec in Box(size=self._size).inner:
+            block = self.block(vec)
             if block is not None:
                 blockToPlace = copy(block)
                 blockToPlace.name = substitutions.get(block.name, block.name)
-                if blockToPlace.needs_late_placement:
-                    late_blocks.append(LateBlockInfo(blockToPlace, vec))
+                if blockToPlace.needsLatePlacement and replace is None:
+                    lateBlocks.append(LateBlockInfo(blockToPlace, vec))
                 else:
                     itf.placeBlock(vec, blockToPlace, replace)
 
         # Place the late blocks, thrice.
         # Yes, placing them three time is really necessary. Wall-type blocks require it.
-        for late_block_info in late_blocks:
-            itf.placeBlock(
-                late_block_info.position,
-                late_block_info.block,
-                replace
-            )
-        for late_block_info in late_blocks[::-1]:
-            itf.placeBlock(
-                late_block_info.position,
-                late_block_info.block,
-                (None if replace is None else to_namespaced_id(late_block_info.block.name))
-            )
-        for late_block_info in late_blocks:
-            itf.placeBlock(
-                late_block_info.position,
-                late_block_info.block,
-                (None if replace is None else to_namespaced_id(late_block_info.block.name))
-            )
+        for info in lateBlocks:
+            itf.placeBlock(info.position, info.block)
+        for info in lateBlocks[::-1]:
+            itf.placeBlock(info.position, info.block)
+        for info in lateBlocks:
+            itf.placeBlock(info.position, info.block)
 
         itf.transform.pop(t)
+
+    def __repr__(self):
+        return f"Model(size={repr(self.size)}, blocks={repr(self.blocks)})"
