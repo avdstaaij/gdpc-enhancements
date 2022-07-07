@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-# Builds the model read from standard in at the bottom left corner of the buildarea.
-# Used for testing
-
+from importlib import import_module
 import sys
-import os
 import argparse
 from glm import ivec3 # Import needed for eval
 
@@ -16,20 +13,21 @@ from mc.interface import getBuildArea, Interface
 from mc.block import Block # Import needed for eval
 from mc.model import Model
 
-import models
+
+DEFAULT_MODEL_MODULE = "models"
 
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description="Builds a saved minecraft model in the build area"
+        description="Builds a saved minecraft model in the build area. Useful for debugging."
     )
     parser.add_argument(
         "model", nargs="?", type=str,
-        help = "The model to place (read from \"models.py\"). Ignored if --eval is used."
+        help = f"The model to place, specified as \"[module].[model]\". Ignored if --eval is used. Example: \"path.to.models.house\". If the string contains no \".\", the prefix \"{DEFAULT_MODEL_MODULE}.\" is added (i.e. the default model file is \"models.py\")."
     )
     parser.add_argument(
         "-e", "--eval", action="store_true",
-        help = "eval() a model string passed through standard in, instead of reading a model from the model file."
+        help = "eval() a model string passed through standard in, instead of reading a model from a model file."
     )
     parser.add_argument(
         "-r", "--rotation", type=int, default=0,
@@ -44,9 +42,11 @@ def main():
         modelString = sys.stdin.read()
         model: Model = eval(modelString) # pylint: disable=eval-used
     elif args.model is not None:
-        model: Model = getattr(models, args.model)
+        moduleName, dot, modelName = args.model.rpartition(".")
+        if dot == "": moduleName = DEFAULT_MODEL_MODULE
+        model = getattr(import_module(moduleName), modelName)
     else:
-        eprint("Error: specify either a model name, or use --eval.\nUse --help for more info.")
+        eprint("Error: specify either a model path, or use --eval.\nUse --help for more info.")
         sys.exit(1)
 
     if args.rotation not in [0, 1, 2, 3]:
