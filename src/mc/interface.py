@@ -16,7 +16,7 @@ with stdoutToStderr(): # GDPC outputting to stdout on import messes with some sc
     from gdpc import interface, direct_interface, worldLoader
 
 from mc.vector_util import scaleToFlip3D, Rect, boxBetween
-from mc.transform import Transform
+from mc.transform import Transform, toTransform
 from mc.block import Block
 
 
@@ -67,16 +67,16 @@ class Interface:
 
     def __init__(
         self,
-        transform: Optional[Transform] = None,
-        buffering                      = True,
-        bufferLimit                    = 1024,
-        multithreading                 = False,
-        multithreadingWorkers          = 8,
-        caching                        = False,
-        cacheLimit                     = 8192,
+        transformOrVec: Optional[Union[Transform, ivec3]] = None,
+        buffering             = True,
+        bufferLimit           = 1024,
+        multithreading        = False,
+        multithreadingWorkers = 8,
+        caching               = False,
+        cacheLimit            = 8192,
     ):
         """ Constructs an Interface instance with the specified transform and settings """
-        self.transform = Transform() if transform is None else transform
+        self.transform = Transform() if transformOrVec is None else toTransform(transformOrVec)
         self.gdpcInterface = interface.Interface(
             buffering   = buffering,
             bufferlimit = bufferLimit + 1, # +1 so we can intercept the buffer flushes
@@ -227,8 +227,7 @@ class Interface:
             self.transform.\n
             If [block].name is a list, names are sampled randomly.
             """
-        t = Transform(transformOrVec) if isinstance(transformOrVec, ivec3) else transformOrVec
-        self.placeBlockGlobal(self.transform @ t, block, replace)
+        self.placeBlockGlobal(self.transform @ toTransform(transformOrVec), block, replace)
 
 
     def sendBufferedBlocks(self, retries = 5):
@@ -281,9 +280,9 @@ class Interface:
 
 
     @contextmanager
-    def pushTransform(self, transform: Optional[Transform] = None):
+    def pushTransform(self, transformOrVec: Optional[Union[Transform, ivec3]] = None):
         """ Creates a context that reverts all changes to self.transform on exit.
-            If [transform] is not None, it is pushed to self.transform on enter.
+            If [transformOrVec] is not None, it is pushed to self.transform on enter.
 
             Can be used to create a local coordinate system on top of the current local coordinate
             system.
@@ -291,8 +290,8 @@ class Interface:
             Not to be confused with Transform.push()! """
 
         originalTransform = deepcopy(self.transform)
-        if transform is not None:
-            self.transform @= transform
+        if transformOrVec is not None:
+            self.transform @= toTransform(transformOrVec)
         try:
             yield
         finally:

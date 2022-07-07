@@ -56,6 +56,12 @@ def buildExampleStructure(itf: Interface):
     with itf.pushTransform(Transform(ivec3(21,1,1))):
         placeBox(itf, Box(size=ivec3(3,3,3)), Block("dark_oak_planks"))
 
+    # Several functions with a Transform parameter can also take a vector argument, which is
+    # interpreted as a translation. This QoL feature removes the need to construct a Transform
+    # when only a translation is needed. Interface.pushTransform() is one of these functions.
+    with itf.pushTransform(ivec3(25,1,1)):
+        placeBox(itf, Box(size=ivec3(3,3,3)), Block("crimson_planks"))
+
     # Build a staircase with various transformations
     def buildStaircase():
         for z in range(3):
@@ -89,26 +95,26 @@ def buildExampleStructure(itf: Interface):
     # transform is the equivalent of applying the subtransforms from right to left, not the other
     # way around.
     # Transform supports many more operations besides multiplication: refer to transform.py.
-    t1 = Transform(ivec3(25,1,1))
+    t1 = Transform(ivec3(1,1,9))
     t2 = Transform(scale=ivec3(1,2,1))
     t3 = rotatedBoxTransform(Box(size=ivec3(3,3,3)), 1)
     transform = t1 @ t2 @ t3
     with itf.pushTransform(transform):
-        placeBox(itf, Box(size=ivec3(3,1,3)), Block("sandstone"))
+        placeBox(itf, Box(size=ivec3(1,1,3)), Block("sandstone"))
 
     # Place a block with NBT data
-    with itf.pushTransform(Transform(ivec3(1,1,9))):
+    with itf.pushTransform(ivec3(1,1,9)):
         itf.placeBlock(ivec3(1,0,1), Block("chest", facing="south", nbt='Items: [{Slot: 13, id: "apple", Count: 1}]'))
 
     # There are some NBT helpers available
-    with itf.pushTransform(Transform(ivec3(5,1,9))):
+    with itf.pushTransform(ivec3(5,1,9)):
         nbt = signNBT(line2="Hello, world!", color="blue")
         placeBox(itf, Box(ivec3(1,0,1), ivec3(1,2,1)), Block("stone"))
         itf.placeBlock(ivec3(1,1,2), Block("oak_wall_sign", facing="south", nbt=nbt))
 
     # It is possible to build a model in minecraft, scan it in, and then place it from code!
     testShape = models.testShape
-    with itf.pushTransform(Transform(ivec3(9,1,9))):
+    with itf.pushTransform(ivec3(9,1,9)):
         testShape.build(itf)
         testShape.build(itf, rotatedBoxTransform(Box(ivec3( 5,0,0), testShape.size), 1))
         testShape.build(itf, flippedBoxTransform(Box(ivec3(10,0,0), testShape.size), bvec3(0,0,1)))
@@ -117,7 +123,7 @@ def buildExampleStructure(itf: Interface):
     # applying their "texture" later. Namespaced id's are required for the keys.
     testShape.build(
         itf,
-        Transform(ivec3(24,1,9)),
+        ivec3(24,1,9),
         substitutions={
             "minecraft:red_concrete":    "red_wool",
             "minecraft:blue_concrete":   "blue_wool",
@@ -152,7 +158,7 @@ def main():
     # Build the example structure in the center of the build area, at the mean height.
     offset = centeredSubRectOffset(buildRect, EXAMPLE_STRUCTURE_SIZE)
     height = int(np.mean(rectSlice(heightmap, Rect(size=EXAMPLE_STRUCTURE_SIZE))))
-    with itf.pushTransform(Transform(addY(offset, height))):
+    with itf.pushTransform(addY(offset, height)):
         buildExampleStructure(itf)
 
     # Flush block buffer

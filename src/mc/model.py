@@ -48,7 +48,13 @@ class Model:
         self._blocks[(vec.x * self._size.y + vec.y) * self._size.z + vec.z] = block
 
 
-    def build(self, itf: Interface, t = Transform(), substitutions: Optional[Dict[str, str]] = None, replace: Optional[Union[str, List[str]]] = None):
+    def build(
+        self,
+        itf:            Interface,
+        transformOrVec: Optional[Union[Transform, ivec3]] = None,
+        substitutions:  Optional[Dict[str, str]]          = None,
+        replace:        Optional[Union[str, List[str]]]   = None
+    ):
         """" Builds the model.
 
              Use [substitutions] to build the model with certain blocks types replaced by others.
@@ -75,7 +81,7 @@ class Model:
 
         lateBlocks: List[LateBlockInfo] = []
 
-        with itf.pushTransform(t):
+        with itf.pushTransform(transformOrVec):
 
             for vec in Box(size=self._size).inner:
                 block = self.block(vec)

@@ -1,5 +1,6 @@
 """ Provides the Transform class and related functions """
 
+from typing import Union
 from dataclasses import dataclass, field
 
 from glm import ivec3, bvec3
@@ -19,12 +20,15 @@ class Transform:
         When applied to a vector, [scaling] is applied first, [rotation] second, and [translation]
         third. Negative scales can be used to flip.
 
-        Note that only integer scaling is supported. This may cause some unexpected effects, such as
-        t1.compose(t2.inverted()) not always being equivalent to t1.composeInv(t2). """
+        Note that only 90-degree rotations in the XZ-plane are supported. Hence, [rotation] should
+        be 0, 1, 2 or 3.
+
+        Also note that only integer scaling is supported. This may cause some unexpected effects,
+        such as t1.compose(t2.inverted()) not always being equivalent to t1.composeInv(t2). """
 
     translation: ivec3 = field(default_factory=ivec3)
-    rotation:    int   = 0 # XZ-rotation; 0, 1, 2 or 3
-    scale:       ivec3 = field(default_factory=lambda: ivec3(1,1,1)) # Only integer scaling!
+    rotation:    int   = 0
+    scale:       ivec3 = field(default_factory=lambda: ivec3(1,1,1))
 
     def apply(self, vec: ivec3):
         """ Applies this transform to [vec].\n
@@ -114,6 +118,16 @@ class Transform:
 # ==================================================================================================
 # Transform utilities
 # ==================================================================================================
+
+
+# A more accurate name would be [transformOrTranslation], but that makes lots of lines too long.
+def toTransform(transformOrVec: Union[Transform, ivec3]):
+    """ Converts [transformOrVec] to a Transform, interpreting a vector as a translation.\n
+        Functions that take a Transform parameter are very often called with just a translation.
+        By taking a transformOrVec pararameter instead and using this converter, calling such a
+        function with just a translation becomes slightly easier. This does however cost a bit
+        of performance (for the isinstance call), and may appear somewhat magic-y. """
+    return Transform(transformOrVec) if isinstance(transformOrVec, ivec3) else transformOrVec
 
 
 def rotatedBoxTransform(box: Box, rotation: int):
