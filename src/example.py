@@ -5,14 +5,14 @@ import sys
 import numpy as np
 from glm import ivec2, ivec3, bvec3
 
-from mc.vector_util import addY, vecString, Rect, Box, centeredSubRectOffset, rectSlice
+from util.util import eprint
+
+from mc.vector_util import addY, vecString, Rect, Box, centeredSubRect, rectSlice
 from mc.transform import Transform, rotatedBoxTransform, scaledBoxTransform, flippedBoxTransform
 from mc.nbt_util import signNBT
 from mc.block import Block
 from mc.interface import Interface, getBuildArea, getWorldSlice
 from mc.geometry import placeBox, placeRectOutline, placeCheckeredBox
-
-from util.util import eprint
 
 import models
 
@@ -148,17 +148,17 @@ def main():
     worldSlice = getWorldSlice(buildRect)
     heightmap  = worldSlice.heightmaps["MOTION_BLOCKING_NO_LEAVES"]
 
-    # Create an Interface object
-    itf = Interface()
+    # Create an Interface object with a transform that translates to the build rect
+    itf = Interface(addY(buildRect.offset))
 
     # Place build area indicator
     meanHeight = int(np.mean(heightmap))
-    placeRectOutline(itf, buildRect, meanHeight + 20, Block("red_concrete"))
+    placeRectOutline(itf, Rect(size=buildRect.size), meanHeight + 20, Block("red_concrete"))
 
     # Build the example structure in the center of the build area, at the mean height.
-    offset = centeredSubRectOffset(buildRect, EXAMPLE_STRUCTURE_SIZE)
-    height = int(np.mean(rectSlice(heightmap, Rect(size=EXAMPLE_STRUCTURE_SIZE))))
-    with itf.pushTransform(addY(offset, height)):
+    rect   = centeredSubRect(Rect(size=buildRect.size), EXAMPLE_STRUCTURE_SIZE)
+    height = int(np.mean(rectSlice(heightmap, rect)))
+    with itf.pushTransform(addY(rect.offset, height)):
         buildExampleStructure(itf)
 
     # Flush block buffer
