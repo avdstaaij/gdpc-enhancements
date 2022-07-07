@@ -75,28 +75,27 @@ class Model:
 
         lateBlocks: List[LateBlockInfo] = []
 
-        itf.transform.push(t)
+        with itf.pushTransform(t):
 
-        for vec in Box(size=self._size).inner:
-            block = self.block(vec)
-            if block is not None:
-                blockToPlace = copy(block)
-                blockToPlace.name = substitutions.get(block.name, block.name)
-                if blockToPlace.needsLatePlacement and replace is None:
-                    lateBlocks.append(LateBlockInfo(blockToPlace, vec))
-                else:
-                    itf.placeBlock(vec, blockToPlace, replace)
+            for vec in Box(size=self._size).inner:
+                block = self.block(vec)
+                if block is not None:
+                    blockToPlace = copy(block)
+                    blockToPlace.name = substitutions.get(block.name, block.name)
+                    if blockToPlace.needsLatePlacement and replace is None:
+                        lateBlocks.append(LateBlockInfo(blockToPlace, vec))
+                    else:
+                        itf.placeBlock(vec, blockToPlace, replace)
 
-        # Place the late blocks, thrice.
-        # Yes, placing them three time is really necessary. Wall-type blocks require it.
-        for info in lateBlocks:
-            itf.placeBlock(info.position, info.block)
-        for info in lateBlocks[::-1]:
-            itf.placeBlock(info.position, info.block)
-        for info in lateBlocks:
-            itf.placeBlock(info.position, info.block)
+            # Place the late blocks, thrice.
+            # Yes, placing them three time is really necessary. Wall-type blocks require it.
+            for info in lateBlocks:
+                itf.placeBlock(info.position, info.block)
+            for info in lateBlocks[::-1]:
+                itf.placeBlock(info.position, info.block)
+            for info in lateBlocks:
+                itf.placeBlock(info.position, info.block)
 
-        itf.transform.pop(t)
 
     def __repr__(self):
         return f"Model(size={repr(self.size)}, blocks={repr(self.blocks)})"

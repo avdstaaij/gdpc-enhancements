@@ -3,7 +3,8 @@
     Wraps gdpc v5.0's interface module to work with vectors, and extends it. """
 
 from typing import Union, Optional, List
-from copy import copy
+from contextlib import contextmanager
+from copy import copy, deepcopy
 import random
 import time
 from concurrent import futures
@@ -277,3 +278,22 @@ class Interface:
 
 
     # TODO: if need be, we can wrap gdpcInterface.getBlock() as well.
+
+
+    @contextmanager
+    def pushTransform(self, transform: Optional[Transform] = None):
+        """ Creates a context that reverts all changes to self.transform on exit.
+            If [transform] is not None, it is pushed to self.transform on enter.
+
+            Can be used to create a local coordinate system on top of the current local coordinate
+            system.
+
+            Not to be confused with Transform.push()! """
+
+        originalTransform = deepcopy(self.transform)
+        if transform is not None:
+            self.transform @= transform
+        try:
+            yield
+        finally:
+            self.transform = originalTransform

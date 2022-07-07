@@ -107,13 +107,11 @@ def placeRect(itf: Interface, rect: Rect, y: int, block: Block, replace: Optiona
 def placeRectOutline(itf: Interface, rect: Rect, y: int, block: Block, replace: Optional[Union[str, List[str]]] = None):
     """ Places the outline of a rectangle of blocks in the XY-plane, at height [y] """
     if (rect.size.x == 0 or rect.size.y == 0): return
-    t = Transform(addY(rect.offset, y))
-    itf.transform.push(t)
-    placeCuboid(itf, ivec3(            0, 0,             0), ivec3(rect.size.x-1, 0,             0), block, replace)
-    placeCuboid(itf, ivec3(rect.size.x-1, 0,             0), ivec3(rect.size.x-1, 0, rect.size.y-1), block, replace)
-    placeCuboid(itf, ivec3(rect.size.x-1, 0, rect.size.y-1), ivec3(            0, 0, rect.size.y-1), block, replace)
-    placeCuboid(itf, ivec3(            0, 0, rect.size.y-1), ivec3(            0, 0,             0), block, replace)
-    itf.transform.pop(t)
+    with itf.pushTransform(Transform(addY(rect.offset, y))):
+        placeCuboid(itf, ivec3(            0, 0,             0), ivec3(rect.size.x-1, 0,             0), block, replace)
+        placeCuboid(itf, ivec3(rect.size.x-1, 0,             0), ivec3(rect.size.x-1, 0, rect.size.y-1), block, replace)
+        placeCuboid(itf, ivec3(rect.size.x-1, 0, rect.size.y-1), ivec3(            0, 0, rect.size.y-1), block, replace)
+        placeCuboid(itf, ivec3(            0, 0, rect.size.y-1), ivec3(            0, 0,             0), block, replace)
 
 
 def placeCornerPillars(itf: Interface, box: Box, block: Block, replace: Optional[Union[str, List[str]]] = None):

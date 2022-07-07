@@ -17,7 +17,7 @@ from util.util import eprint
 import models
 
 
-EXAMPLE_STRUCTURE_SIZE = ivec2(43, 10)
+EXAMPLE_STRUCTURE_SIZE = ivec2(29, 14)
 
 
 # You could take a Transform parameter here and push it on the callee side, or you could require
@@ -47,7 +47,16 @@ def buildExampleStructure(itf: Interface):
     placeBox(itf, Box(size=ivec3(3,3,3)), Block("oak_planks"))
     itf.transform.pop(transform)
 
-    # Build a staircase with various transformations.
+    # Avoid the need to call Transform.pop() with Interface.pushTransform()
+    with itf.pushTransform(): # Reverts changes to itf.transform on exit
+        itf.transform.push(Transform(ivec3(17,1,1)))
+        placeBox(itf, Box(size=ivec3(3,3,3)), Block("acacia_planks"))
+
+    # This common pattern can be simplified even further!
+    with itf.pushTransform(Transform(ivec3(21,1,1))):
+        placeBox(itf, Box(size=ivec3(3,3,3)), Block("dark_oak_planks"))
+
+    # Build a staircase with various transformations
     def buildStaircase():
         for z in range(3):
             for y in range(z):
@@ -55,13 +64,12 @@ def buildExampleStructure(itf: Interface):
             placeBox(itf, Box(ivec3(0,z,z), ivec3(3,1,1)), Block("oak_stairs", facing="south"))
 
     for transform in [
-        Transform(translation=ivec3(17,   1, 1  )),
-        Transform(translation=ivec3(21+2, 1, 1  ), rotation=1),
-        Transform(translation=ivec3(25,   1, 1+2), scale=ivec3(2,1,-1))
+        Transform(translation=ivec3(1,   1, 5  )),
+        Transform(translation=ivec3(5+2, 1, 5  ), rotation=1),
+        Transform(translation=ivec3(9,   1, 5+2), scale=ivec3(2,1,-1))
     ]:
-        itf.transform.push(transform)
-        buildStaircase()
-        itf.transform.pop(transform)
+        with itf.pushTransform(transform):
+            buildStaircase()
 
     # When using a rotating or flipping transform, note that structures will extend in a different
     # direction: a box extending to positive X and Z will extend to negative X and positive Z when
@@ -70,45 +78,46 @@ def buildExampleStructure(itf: Interface):
     # Use rotatedBoxTransform and/or scaledBoxTransform to transform to a rotated/scaled box
     # without needing to manually correct the offset. There's also a flippedBoxTransform.
     for transform in [
-        rotatedBoxTransform(Box(ivec3(32,1,1), ivec3(3,3,3)), 1),
-         scaledBoxTransform(Box(ivec3(36,1,1), ivec3(3,3,3)), ivec3(2,1,-1))
+        rotatedBoxTransform(Box(ivec3(17,1,5), ivec3(3,3,3)), 1),
+         scaledBoxTransform(Box(ivec3(21,1,5), ivec3(3,3,3)), ivec3(2,1,-1))
     ]:
-        itf.transform.push(transform)
-        buildStaircase()
-        itf.transform.pop(transform)
+        with itf.pushTransform(transform):
+            buildStaircase()
 
     # Transforms can be muliplied like matrices.
     # From left to right, we stack "local coordinate systems". Note however, that the composite
     # transform is the equivalent of applying the subtransforms from right to left, not the other
     # way around.
     # Transform supports many more operations besides multiplication: refer to transform.py.
-    t1 = Transform(ivec3(1,1,5))
+    t1 = Transform(ivec3(25,1,1))
     t2 = Transform(scale=ivec3(1,2,1))
     t3 = rotatedBoxTransform(Box(size=ivec3(3,3,3)), 1)
     transform = t1 @ t2 @ t3
-    itf.transform.push(transform)
-    placeBox(itf, Box(size=ivec3(3,1,3)), Block("sandstone"))
-    itf.transform.pop(transform)
+    with itf.pushTransform(transform):
+        placeBox(itf, Box(size=ivec3(3,1,3)), Block("sandstone"))
 
     # Place a block with NBT data
-    itf.placeBlock(ivec3(6,1,6), Block("chest", facing="south", nbt='Items: [{Slot: 13, id: "apple", Count: 1}]'))
+    with itf.pushTransform(Transform(ivec3(1,1,9))):
+        itf.placeBlock(ivec3(1,0,1), Block("chest", facing="south", nbt='Items: [{Slot: 13, id: "apple", Count: 1}]'))
 
-    # There are some helpers available
-    placeBox(itf, Box(ivec3(10,1,6), ivec3(1,2,1)), Block("stone"))
-    itf.placeBlock(ivec3(10,2,7), Block("oak_wall_sign", facing="south", nbt=signNBT(line2="Hello, world!", color="blue")))
+    # There are some NBT helpers available
+    with itf.pushTransform(Transform(ivec3(5,1,9))):
+        nbt = signNBT(line2="Hello, world!", color="blue")
+        placeBox(itf, Box(ivec3(1,0,1), ivec3(1,2,1)), Block("stone"))
+        itf.placeBlock(ivec3(1,1,2), Block("oak_wall_sign", facing="south", nbt=nbt))
 
     # It is possible to build a model in minecraft, scan it in, and then place it from code!
     testShape = models.testShape
-    testShape.build(itf, Transform(ivec3(13,1,5)))
-    testShape.build(itf, rotatedBoxTransform(Box(ivec3(18,1,5), testShape.size), 1))
-    testShape.build(itf, flippedBoxTransform(Box(ivec3(23,1,5), testShape.size), bvec3(0,0,1)))
-    testShape.build(itf, flippedBoxTransform(Box(ivec3(28,1,5), testShape.size), bvec3(0,1,0)))
+    with itf.pushTransform(Transform(ivec3(9,1,9))):
+        testShape.build(itf)
+        testShape.build(itf, rotatedBoxTransform(Box(ivec3( 5,0,0), testShape.size), 1))
+        testShape.build(itf, flippedBoxTransform(Box(ivec3(10,0,0), testShape.size), bvec3(0,0,1)))
 
     # Models can be built with substitutions, making it possible to create "shape" models while
     # applying their "texture" later. Namespaced id's are required for the keys.
     testShape.build(
         itf,
-        Transform(ivec3(33,1,5)),
+        Transform(ivec3(24,1,9)),
         substitutions={
             "minecraft:red_concrete":    "red_wool",
             "minecraft:blue_concrete":   "blue_wool",
@@ -143,10 +152,8 @@ def main():
     # Build the example structure in the center of the build area, at the mean height.
     offset = centeredSubRectOffset(buildRect, EXAMPLE_STRUCTURE_SIZE)
     height = int(np.mean(rectSlice(heightmap, Rect(size=EXAMPLE_STRUCTURE_SIZE))))
-    transform = Transform(addY(offset, height))
-    itf.transform.push(transform)
-    buildExampleStructure(itf)
-    itf.transform.pop(transform)
+    with itf.pushTransform(Transform(addY(offset, height))):
+        buildExampleStructure(itf)
 
     # Flush block buffer
     itf.sendBufferedBlocks()
