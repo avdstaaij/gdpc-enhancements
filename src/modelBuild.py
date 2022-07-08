@@ -26,7 +26,7 @@ DEFAULT_MODEL_MODULE = "models"
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description="Builds a saved Minecraft model in the build area. Useful for debugging."
+        description="Builds a saved Minecraft model in the build area. Useful for development."
     )
     parser.add_argument(
         "model", nargs="?", type=str,
