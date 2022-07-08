@@ -9,7 +9,7 @@ from typing import Any, Union, Optional, List
 from dataclasses import dataclass
 from glm import bvec3
 
-from mc.block_state_util import transformAxisString, transformFacingString
+from gdpce.block_state_util import transformAxisString, transformFacingString
 
 
 @dataclass

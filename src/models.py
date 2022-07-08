@@ -10,8 +10,8 @@ __licence__   = "MIT"
 
 from glm import ivec3
 
-from mc.model import Model
-from mc.block import Block
+from gdpce.model import Model
+from gdpce.block import Block
 
 
 testShape=Model(

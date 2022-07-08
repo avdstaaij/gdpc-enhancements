@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 from glm import ivec3, bvec3
 
-from mc.vector_util import rotateXZ, rotateXZScale, scaleToFlip3D, Box
+from gdpce.vector_util import rotateXZ, rotateXZScale, scaleToFlip3D, Box
 
 
 # ==================================================================================================

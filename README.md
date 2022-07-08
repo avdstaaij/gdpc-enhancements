@@ -157,7 +157,7 @@ import the source files from your code as normal.
 
 For information on how to use `modelPull.py` and `modelBuild.py`, run them
 with a `--help` argument. Unfortunately, due to how Python's import system
-works, these scripts need to lie one directory level below `mc`.
+works, these scripts need to lie in the root source directory.
 
 
 ## Detailed example code

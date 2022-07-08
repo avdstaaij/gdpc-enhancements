@@ -12,11 +12,11 @@ __licence__   = "MIT"
 
 from glm import ivec3
 
-from mc.vector_util import Box
-from mc.transform import Transform
-from mc.block import Block
-from mc.interface import Interface, getBuildArea
-from mc.geometry import placeBox
+from gdpce.vector_util import Box
+from gdpce.transform import Transform
+from gdpce.block import Block
+from gdpce.interface import Interface, getBuildArea
+from gdpce.geometry import placeBox
 
 import models
 

@@ -20,9 +20,9 @@ from util.util import isign, stdoutToStderr, eprint
 with stdoutToStderr(): # GDPC outputting to stdout on import messes with some scripts
     from gdpc import interface, direct_interface, worldLoader
 
-from mc.vector_util import scaleToFlip3D, Rect, boxBetween
-from mc.transform import Transform, toTransform
-from mc.block import Block
+from gdpce.vector_util import scaleToFlip3D, Rect, boxBetween
+from gdpce.transform import Transform, toTransform
+from gdpce.block import Block
 
 
 def getBuildArea():

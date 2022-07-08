@@ -28,12 +28,12 @@ from glm import ivec2, ivec3, bvec3
 
 from util.util import eprint
 
-from mc.vector_util import addY, vecString, Rect, Box, centeredSubRect, rectSlice
-from mc.transform import Transform, rotatedBoxTransform, scaledBoxTransform, flippedBoxTransform
-from mc.nbt_util import signNBT
-from mc.block import Block
-from mc.interface import Interface, getBuildArea, getWorldSlice
-from mc.geometry import placeBox, placeRectOutline, placeCheckeredBox
+from gdpce.vector_util import addY, vecString, Rect, Box, centeredSubRect, rectSlice
+from gdpce.transform import Transform, rotatedBoxTransform, scaledBoxTransform, flippedBoxTransform
+from gdpce.nbt_util import signNBT
+from gdpce.block import Block
+from gdpce.interface import Interface, getBuildArea, getWorldSlice
+from gdpce.geometry import placeBox, placeRectOutline, placeCheckeredBox
 
 import models
 

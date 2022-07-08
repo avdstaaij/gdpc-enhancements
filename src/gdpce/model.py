@@ -10,10 +10,10 @@ from typing import Union, Optional, List, Dict
 from copy import copy
 from glm import ivec3
 
-from mc.vector_util import Box
-from mc.transform import Transform
-from mc.interface import Interface
-from mc.block import Block
+from gdpce.vector_util import Box
+from gdpce.transform import Transform
+from gdpce.interface import Interface
+from gdpce.block import Block
 
 
 class Model:

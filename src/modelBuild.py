@@ -14,11 +14,11 @@ from glm import ivec3 # Import needed for eval
 
 from util.util import eprint
 
-from mc.vector_util import vecString, Box
-from mc.transform import Transform, rotatedBoxTransform
-from mc.interface import getBuildArea, Interface
-from mc.block import Block # Import needed for eval
-from mc.model import Model
+from gdpce.vector_util import vecString, Box
+from gdpce.transform import Transform, rotatedBoxTransform
+from gdpce.interface import getBuildArea, Interface
+from gdpce.block import Block # Import needed for eval
+from gdpce.model import Model
 
 
 DEFAULT_MODEL_MODULE = "models"

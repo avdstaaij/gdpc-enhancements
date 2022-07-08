@@ -13,11 +13,11 @@ import argparse
 from glm import ivec3
 
 from util.util import eprint
-from mc.vector_util import Box, boxBetween
-from mc.transform import rotatedBoxTransformAndSize
-from mc.interface import getBuildArea, getWorldSlice
-from mc.block import Block
-from mc.model import Model
+from gdpce.vector_util import Box, boxBetween
+from gdpce.transform import rotatedBoxTransformAndSize
+from gdpce.interface import getBuildArea, getWorldSlice
+from gdpce.block import Block
+from gdpce.model import Model
 
 
 def dumpModel(box: Box, rotation: int, filteredBlocks: List[str], filteredBlocksBecomeAir: bool):

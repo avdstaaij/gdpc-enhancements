@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from glm import ivec3
 from gdpc import geometry
 
-from mc.vector_util import addY, scaleToFlip3D, Rect, Box, boxBetween
-from mc.block import Block
-from mc.interface import Interface
+from gdpce.vector_util import addY, scaleToFlip3D, Rect, Box, boxBetween
+from gdpce.block import Block
+from gdpce.interface import Interface
 
 
 # An explanation of why this class is here:
