@@ -45,7 +45,7 @@ EXAMPLE_STRUCTURE_SIZE = ivec2(29, 14)
 # that this is done on the caller side. In this example, we choose the latter.
 def buildExampleStructure(itf: Interface):
     # Clear the area
-    placeBox(itf, Box(size=addY(EXAMPLE_STRUCTURE_SIZE, 10)), Block("air"))
+    placeBox(itf, Box(ivec3(0,1,0), addY(EXAMPLE_STRUCTURE_SIZE, 5)), Block("air"))
 
     # Build a checkered floor
     placeCheckeredBox(itf, Box(size=addY(EXAMPLE_STRUCTURE_SIZE, 1)), Block("gray_concrete"), Block("light_gray_concrete"))
@@ -178,7 +178,7 @@ def main():
 
     # Build the example structure in the center of the build area, at the mean height.
     rect   = centeredSubRect(Rect(size=buildRect.size), EXAMPLE_STRUCTURE_SIZE)
-    height = int(np.mean(rectSlice(heightmap, rect)))
+    height = int(np.mean(rectSlice(heightmap, rect))) - 1
     with itf.pushTransform(addY(rect.offset, height)):
         buildExampleStructure(itf)
 
