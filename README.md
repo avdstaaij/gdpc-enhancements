@@ -1,12 +1,13 @@
 # GDPC enhancements
 
-This repository contains avdstaaij's enhancements to
+This repository contains various enhancements to
 [GDPC](https://github.com/nilsgawlik/gdmc_http_client_python) 5.0.
 
 In time, some or all of these enhancements may be integrated into the main GDPC
 package.
 
-Quick example:
+## Quick example
+
 ```python
 buildArea = getBuildArea()
 
