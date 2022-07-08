@@ -1,7 +1,7 @@
 # GDPC enhancements
 
 This repository contains avdstaaij's enhancements to
-[GDPC](https://github.com/nilsgawlik/gdmc_http_client_python) v5.0.
+[GDPC](https://github.com/nilsgawlik/gdmc_http_client_python) 5.0.
 
 In time, some or all of these enhancements may be integrated into the main GDPC
 package.
@@ -52,8 +52,8 @@ so that you can always build using local coordinates instead of global ones. The
 idea is based on the use of transformation matrices in typical 3D graphics
 applications.
 
-GDPC v5.0 already provides a basic transformation system: you can construct an
-Interface class with x, y and z offsets. That is, GDPC v5.0 supports
+GDPC 5.0 already provides a basic transformation system: you can construct an
+Interface class with x, y and z offsets. That is, GDPC 5.0 supports
 *translations*. This repository, however, enhances this with 90-degree rotations
 around the Y-axis and even integer scaling (and flipping, which is a special
 case of scaling).
@@ -75,7 +75,7 @@ structures anywhere you want. Transformations can even be stacked, allowing you
 to use local coordinate systems within local coordinate systems.
 
 ### NBT data
-Although GDPC v5.0 supports placing blocks with block state properties, it does
+Although GDPC 5.0 supports placing blocks with block state properties, it does
 not fully support placing blocks with NBT data. This is mostly due to the fact
 that the GDMC HTTP mod itself does not fully support it (though this may change
 in the future). To set NBT data, you have to manually send a separate `/data`
@@ -120,9 +120,9 @@ Again, for more usage information, use `./modelBuild.py --help`.
 
 ### Asynchronous requests
 Since blocks are placed using a HTTP interface, all placements are done via HTTP
-requests. In GDPC v5.0, these requests are blocking: they freeze the program
+requests. In GDPC 5.0, these requests are blocking: they freeze the program
 until Minecraft has completed the placement request, and Minecraft can be quite
-slow. GDPC v5.0 provides functionality to buffer block placements in order to
+slow. GDPC 5.0 provides functionality to buffer block placements in order to
 reduce this overhead, but while this improves performance significantly, block
 placement remains very slow.
 

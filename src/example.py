@@ -2,7 +2,7 @@
 
 """ Executable script that build an example structure in the center of the build area.
 
-    The purpose of this file is to demonstrate the usage of the core GDPC v5.0 enhancements provided
+    The purpose of this file is to demonstrate the usage of the core GDPC 5.0 enhancements provided
     by this repository. It does not demonstrate every enhancement, and it assumes some familiarity
     with the base GDPC framework.
 
