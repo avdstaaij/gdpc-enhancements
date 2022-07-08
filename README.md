@@ -6,6 +6,37 @@ This repository contains avdstaaij's enhancements to
 In time, some or all of these enhancements may be integrated into the main GDPC
 package.
 
+Quick example:
+```python
+buildArea = getBuildArea()
+
+itf = Interface(buildArea.offset)
+
+# Place a block
+itf.placeBlock(ivec3(1,0,1), Block("grass_block"))
+
+# Build a cube
+placeBox(itf, Box(ivec3(4,0,0), ivec3(3,3,3)), Block("stone"))
+
+# Build an oriented building in transformed local coordinates
+transform = Transform(translation=ivec3(10,0,0), rotation=1, scale=ivec3(1,2,1))
+with itf.pushTransform(transform):
+    placeBox(itf, Box(size=ivec3(3,1,3)), Block("oak_log", axis="x"))
+
+# Place a block with NBT data
+nbt = 'Items: [{Slot: 13, id: "apple", Count: 1}]'
+itf.placeBlock(ivec3(13,0,1), Block("chest", facing="south", nbt=nbt))
+
+# Build a saved model, with any position and orientation, and with substitutions
+models.testShape.build(
+    itf,
+    Transform(ivec3(16,0,0), rotation=3, scale=ivec3(1,1,-1)),
+    substitutions={
+        "minecraft:oak_planks": ["acacia_planks", "dark_oak_planks"]
+    }
+)
+```
+
 ## Enhancements
 
 ### Vectors
@@ -129,7 +160,7 @@ with a `--help` argument. Unfortunately, due to how Python's import system
 works, these scripts need to lie one directory level below `mc`.
 
 
-## Example code
+## Detailed example code
 
 [`src/example.py`](src/example.py) contains example code that demonstrates the
 usage of most core enhancements. Note that it does assume some familiarity with
