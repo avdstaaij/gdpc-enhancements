@@ -95,6 +95,12 @@ class Interface:
         self._command_buffer:     List[str]            = []
 
 
+    def __del__(self):
+        """ Cleans up this Interface instance """
+        self.sendBufferedBlocks()
+        self.awaitBufferFlushes()
+
+
     @property
     def buffering(self) -> bool:
         """ Whether block placement buffering is enabled """
